@@ -30,5 +30,6 @@ jobs:
         with:
           name: articles
           path: 'כתבות_*'
+          retention-days: 14  # שמור לשבועיים בלבד
 
 
