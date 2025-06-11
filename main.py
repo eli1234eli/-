@@ -1,9 +1,10 @@
+#  מחלק את הכתבות לקבצים של 150 מילים כל אחד
 import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
 import re
-
+from textwrap import wrap
 
 def send_to_yemot(file_path, new_filename, subfolder):
     try:
@@ -11,7 +12,7 @@ def send_to_yemot(file_path, new_filename, subfolder):
             files = {'file': (new_filename, f)}
             data = {
                 'path': f"ivr2:/5/{subfolder}/{new_filename}",
-                'token': '0773201948:14725836'  # החלף לטוקן שלך
+                'token': '0773201948:14725836'
             }
             response = requests.post("https://www.call2all.co.il/ym/api/UploadFile", data=data, files=files)
             if response.status_code == 200 and '"success":true' in response.text:
@@ -19,21 +20,23 @@ def send_to_yemot(file_path, new_filename, subfolder):
                 return True
             else:
                 print(f"[ERROR] שליחה נכשלה לקובץ {new_filename} (סטטוס: {response.status_code})")
-                print("תגובה מהשרת:", response.text)
                 return False
     except Exception as e:
         print(f"[EXCEPTION] שגיאה בשליחת קובץ {new_filename}: {e}")
         return False
 
-
-def clean_text_by_line_length(title, text, min_words=13):
+def clean_text_by_line_length(text, min_words=13):
     lines = text.splitlines()
     cleaned_lines = []
     for line in lines:
         if len(line.strip().split()) >= min_words:
             cleaned_lines.append(line.strip())
-    return title + "\n\n" + "\n\n".join(cleaned_lines)
+    return "\n\n".join(cleaned_lines)
 
+def split_text_to_chunks(full_text, chunk_size_words=150):
+    words = full_text.split()
+    chunks = [' '.join(words[i:i+chunk_size_words]) for i in range(0, len(words), chunk_size_words)]
+    return chunks
 
 print(f"\nהתחלת הרצה: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -42,6 +45,7 @@ folder_name = f"כתבות_{today}"
 os.makedirs(folder_name, exist_ok=True)
 
 counter = 0
+index_entries = []
 
 BASE_URL = "https://www.jdn.co.il"
 NEWS_SECTION_URL = f"{BASE_URL}/news/"
@@ -72,13 +76,8 @@ for link in article_links:
 
         title_tag = art_soup.find('title')
         title = title_tag.get_text(strip=True) if title_tag else "ללא כותרת"
+        short_title = title.split(" - ")[0][:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "_", title)
-        original_filename = f"{safe_title[:100]}.tts"
-        filepath = os.path.join(folder_name, original_filename)
-
-        if os.path.exists(filepath):
-            print(f"[SKIP] הקובץ כבר קיים: {original_filename}")
-            continue
 
         content_divs = art_soup.find_all('div', class_='elementor-widget-container')
         article_text = ''
@@ -89,25 +88,43 @@ for link in article_links:
                 if text:
                     article_text += text + "\n\n"
 
-        cleaned_text = clean_text_by_line_length(title, article_text)
-
-        if cleaned_text.strip():
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(cleaned_text)
-
-            new_filename = f"{str(counter).zfill(3)}.tts"
-            subfolder = str(counter)
-            print(f"[INFO] מעלה קובץ: {new_filename} לתת-שלוחה 5/{subfolder}")
-            upload_success = send_to_yemot(filepath, new_filename, subfolder)
-
-            if upload_success:
-                counter += 1
-            else:
-                print(f"[FAIL] נכשל שליחת הקובץ: {new_filename}")
-        else:
+        cleaned_text = clean_text_by_line_length(article_text)
+        if not cleaned_text.strip():
             print(f"[EMPTY] תוכן ריק לאחר סינון לכתבה: {link}")
+            continue
+
+        chunks = split_text_to_chunks(cleaned_text)
+        subfolder = str(counter)
+
+        for i, chunk in enumerate(chunks):
+            if i == 0:
+                full_text = f"{title}\n\n{chunk}"
+                filename = f"{str(counter).zfill(3)}.tts"
+            else:
+                full_text = f"המשך ל: {title}\n\n{chunk}"
+                filename = f"{str(counter + i + 99).zfill(3)}.tts"  # קובץ 101 והלאה
+
+            filepath = os.path.join(folder_name, filename)
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(full_text)
+
+            print(f"[INFO] מעלה קובץ: {filename} לתת-שלוחה 5/{subfolder}")
+            send_to_yemot(filepath, filename, subfolder)
+
+        index_entries.append(f"{short_title} הקש {counter}.\n")
+        counter += 1
 
     except Exception as e:
         print(f"[ERROR] שגיאה בעיבוד הכתבה {link}: {e}")
+
+# יצירת קובץ אינדקס
+if index_entries:
+    index_filename = "M0000.tts"
+    index_path = os.path.join(folder_name, index_filename)
+    with open(index_path, 'w', encoding='utf-8') as f:
+        f.write("\n".join(index_entries))
+
+    print(f"[INFO] מעלה את הקובץ {index_filename} לשלוחה הראשית 5")
+    send_to_yemot(index_path, index_filename, "")
 
 print(f"\nסיום ההרצה: {datetime.now().strftime('%H:%M:%S')}")
