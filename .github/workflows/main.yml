@@ -2,7 +2,7 @@ name: Run Python Script Every Hour
 
 on:
   schedule:
-    - cron: '0 * * * *'  # כל שעה
+    - cron: '*/5 * * * *'  # כל 5 דקות
   workflow_dispatch:
 
 jobs:
