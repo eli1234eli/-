@@ -1,10 +1,8 @@
-#  מחלק את הכתבות לקבצים של 150 מילים כל אחד
 import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
 import re
-from textwrap import wrap
 
 def send_to_yemot(file_path, new_filename, subfolder):
     try:
@@ -44,7 +42,8 @@ today = datetime.now().strftime('%Y-%m-%d')
 folder_name = f"כתבות_{today}"
 os.makedirs(folder_name, exist_ok=True)
 
-counter = 0
+current_file_number = 1  # התחלה מ-001
+article_counter = 0
 index_entries = []
 
 BASE_URL = "https://www.jdn.co.il"
@@ -94,16 +93,19 @@ for link in article_links:
             continue
 
         chunks = split_text_to_chunks(cleaned_text)
-        subfolder = str(counter)
+        subfolder = str(article_counter)
 
-        for i, chunk in enumerate(chunks):
-            if i == 0:
-                full_text = f"{title}\n\n{chunk}"
-                filename = f"{str(counter).zfill(3)}.tts"
+        for i in range(5):  # תמיד 5 קבצים
+            if i < len(chunks):
+                chunk_text = chunks[i]
+                if i == 0:
+                    full_text = f"{title}\n\n{chunk_text}"
+                else:
+                    full_text = chunk_text
             else:
-                full_text = f"המשך ל: {title}\n\n{chunk}"
-                filename = f"{str(counter + i + 99).zfill(3)}.tts"  # קובץ 101 והלאה
+                full_text = "הגעת לסוף"
 
+            filename = f"{str(current_file_number).zfill(3)}.tts"
             filepath = os.path.join(folder_name, filename)
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(full_text)
@@ -111,8 +113,10 @@ for link in article_links:
             print(f"[INFO] מעלה קובץ: {filename} לתת-שלוחה 5/{subfolder}")
             send_to_yemot(filepath, filename, subfolder)
 
-        index_entries.append(f"{short_title} הקש {counter}.\n")
-        counter += 1
+            current_file_number += 1
+
+        index_entries.append(f"{short_title} הקש {subfolder}.\n")
+        article_counter += 1
 
     except Exception as e:
         print(f"[ERROR] שגיאה בעיבוד הכתבה {link}: {e}")
