@@ -26,4 +26,4 @@ jobs:
         run: python3 main.py
 
       - name: Run main_emass.py (Emess)
-        run: python3 main2.py
+        run: python3 main_emass.py
