@@ -26,7 +26,9 @@ jobs:
         run: python3 main.py
 
       - name: Upload articles as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: articles
           path: 'כתבות_*'
+
+
