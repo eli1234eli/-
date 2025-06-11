@@ -1,8 +1,8 @@
-name: Run Python Script Every Hour
+name: Run Python Script Every Minute
 
 on:
   schedule:
-    - cron: '0 * * * *'  # כל שעה
+    - cron: '*/1 * * * *'  # כל דקה
   workflow_dispatch:
 
 jobs:
