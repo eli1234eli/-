@@ -2,7 +2,7 @@ name: Run Python Script Every Minute
 
 on:
   schedule:
-    - cron: '*/1 * * * *'  # כל דקה
+    - cron: '* * * * *'  # כל דקה
   workflow_dispatch:
 
 jobs:
@@ -28,5 +28,5 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: articles
-          path: 'כתבות_*/*.TTS'
+          name: tts-files
+          path: 'כתבות_*/'
