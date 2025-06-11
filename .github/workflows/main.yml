@@ -25,5 +25,5 @@ jobs:
       - name: Run main.py (JDN)
         run: python3 main.py
 
-      - name: Run main2.py (Emess)
+      - name: Run main_emass.py (Emess)
         run: python3 main2.py
