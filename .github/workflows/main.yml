@@ -18,10 +18,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install -r requirements.txt
-
       - name: Run the script
         run: python3 main.py
 
