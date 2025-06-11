@@ -24,3 +24,9 @@ jobs:
 
       - name: Run the script
         run: python3 main.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: articles
+          path: 'כתבות_*/*.TTS'
