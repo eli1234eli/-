@@ -43,7 +43,7 @@ folder_name = f"כתבות_{today}"
 os.makedirs(folder_name, exist_ok=True)
 
 current_file_number = 1  # התחלה מ-001
-article_counter = 0
+article_counter = 1
 index_entries = []
 
 BASE_URL = "https://www.jdn.co.il"
@@ -103,7 +103,7 @@ for link in article_links:
                 else:
                     full_text = chunk_text
             else:
-                full_text = "הגעת לסוף"
+                full_text = "ס"
 
             filename = f"{str(current_file_number).zfill(3)}.tts"
             filepath = os.path.join(folder_name, filename)
