@@ -1,9 +1,10 @@
-#  לאתר אמס 
+#  קוד לאתר אמס
 import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
 import re
+
 
 def send_to_yemot(file_path, new_filename, subfolder):
     try:
@@ -24,6 +25,7 @@ def send_to_yemot(file_path, new_filename, subfolder):
         print(f"[EXCEPTION] שגיאה בשליחת קובץ {new_filename}: {e}")
         return False
 
+
 def clean_text_by_line_length(text, min_words=13):
     lines = text.splitlines()
     cleaned_lines = []
@@ -32,7 +34,8 @@ def clean_text_by_line_length(text, min_words=13):
             cleaned_lines.append(line.strip())
     return "\n\n".join(cleaned_lines)
 
-def split_text_to_chunks(full_text, chunk_size_words=150):
+
+def split_text_to_chunks(full_text, chunk_size_words=100):
     words = full_text.split()
     chunks = [' '.join(words[i:i+chunk_size_words]) for i in range(0, len(words), chunk_size_words)]
     return chunks
@@ -93,6 +96,7 @@ for link in article_links:
             continue
 
         chunks = split_text_to_chunks(cleaned_text)
+        chunks = chunks[:5]  # מקסימום 5 קבצים
         subfolder = str(article_counter)
 
         for i in range(5):  # תמיד 5 קבצים
@@ -103,7 +107,7 @@ for link in article_links:
                 else:
                     full_text = chunk_text
             else:
-                full_text = "ס"
+                full_text = "סוף כתבה"
 
             filename = f"{str(current_file_number).zfill(3)}.tts"
             filepath = os.path.join(folder_name, filename)
